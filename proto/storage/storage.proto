@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package storage;
+
+import "model/model.proto";
+
+option go_package = "github.com/WhiCu/grpc-fileshare/gen/go/storage;storage";
+
+
+service Storage {
+
+    // Операции CRUD
+    rpc CreateFile(CreateFileRequest) returns (FileResponse);
+    rpc GetFile(GetFileRequest) returns (FileResponse);
+    rpc UpdateFile(UpdateFileRequest) returns (FileResponse);
+    rpc DeleteFile(DeleteFileRequest) returns (OperationResponse);
+
+    // Список файлов
+    rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
+
+    // Большие файлы
+    rpc UploadFile(stream UploadFileRequest) returns (FileResponse);
+    rpc DownloadFile(DownloadFileRequest) returns (stream DownloadFileChunk);
+}
+
+// Общие сообщения
+message OperationResponse {
+    model.Status status = 1;
+}
+
+message FileResponse {
+    model.Status status = 1;   
+    model.File file = 2;
+}
+
+// Create
+message CreateFileRequest {
+    model.File file = 1;
+    bytes content = 2;  // Контент файла для загрузки
+}
+
+// Read
+message GetFileRequest {
+    string file_uuid = 1;
+    string requesting_user_uuid = 2;  // UUID пользователя, запрашивающего файл
+}
+
+// Update
+message UpdateFileRequest {
+    string requesting_user_uuid = 1;
+    model.File metadata = 2;  // Обновляемые метаданные
+    optional bytes content = 3;        // Новое содержимое
+}
+
+// Delete
+message DeleteFileRequest {
+    string file_uuid = 1;
+    string requesting_user_uuid = 2;
+}
+
+// List
+message ListFilesRequest {
+    string user_uuid = 1;             // Чьи файлы запрашиваем
+    string requesting_user_uuid = 2;  // Кто запрашивает
+    optional uint32 limit = 3;
+    optional uint32 offset = 4;
+}
+
+message ListFilesResponse {
+    repeated model.File files = 1;
+    model.Status status = 2;
+    uint32 total_count = 4;
+}
+
+// Stream-сообщения
+
+// Upload
+message UploadFileRequest {
+    oneof data {
+        FileUploadMetadata metadata = 1;  // Только в первом сообщении
+        bytes chunk = 2;                  // Последующие сообщения - chunks
+    }
+}
+
+message FileUploadMetadata {
+    model.File file = 1;               // Метаданные файла
+    string requesting_user_uuid = 2;   // UUID пользователя
+}
+
+// Download
+
+message DownloadFileRequest {
+    string file_uuid = 1;
+    string requesting_user_uuid = 2;   // UUID пользователя
+}
+
+message DownloadFileChunk {
+    oneof data {
+        FileDownloadMetadata metadata = 1;  // Только в первом сообщении
+        bytes chunk = 2;                    // Данные файла
+    }
+}
+
+message FileDownloadMetadata {
+    model.File file = 1;               // Метаданные файла
+    uint64 total_size = 2;            // Общий размер файла в байтах
+}

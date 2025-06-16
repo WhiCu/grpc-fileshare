@@ -1,0 +1,23 @@
+version: '3'
+
+silent: false
+
+tasks:
+
+  generate:
+    aliases:
+      - gen
+    desc: "Generate go code from proto files"
+    cmds:
+      - protoc 
+        -I proto 
+        proto/storage/*.proto proto/model/*.proto
+        --go_out=./gen/go/ 
+        --go_opt=paths=source_relative 
+        --go-grpc_out=./gen/go/ 
+        --go-grpc_opt=paths=source_relative
+  
+  run:
+    desc: "Run the server"
+    cmds:
+      - go run cmd/main.go

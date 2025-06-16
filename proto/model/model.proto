@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package model;
+
+option go_package = "github.com/WhiCu/grpc-fileshare/gen/go/model;model";
+
+message File {
+    string uuid = 1;                // Уникальный ID файла
+    string owner_uuid = 2;                 // Владелец
+    optional string name = 3;                // Имя файла
+    optional string path = 4;                // Путь в хранилище
+    optional uint64 size = 5;                // Размер в байтах
+    optional string mime_type = 6;           // MIME-тип (например, "image/png")
+    optional int64 uploaded_at = 7;          // Дата загрузки (Unix timestamp)
+    optional bool is_public = 8;             // Доступен ли файл публично
+    optional AccessType access_type = 9;    // Тип доступа
+    repeated string allowed_user_uuids = 10;     // Список UUID пользователей, которым разрешен доступ
+}
+
+// Тип доступа
+enum AccessType {
+    PRIVATE = 0;          // Только владелец (значение по умолчанию)
+    FRIENDS = 1;          // Все друзья
+    PUBLIC = 2;           // Доступно всем
+    CUSTOM = 3;           // Только явно указанные в allowed_user_uuids
+    FRIENDS_AND_CUSTOM = 4;  // Друзья + дополнительные пользователи
+}
+
+// Статус операции
+message Status {
+    bool success = 1;
+    optional string error = 2;
+}
